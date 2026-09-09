@@ -1,20 +1,47 @@
-# Steam Achievement Manager
+# Steam Stats Editor
 
-Steam Achievement Manager (SAM) is a lightweight, portable application used to manage achievements and statistics in the popular PC gaming platform Steam. This application requires the [Steam client](https://store.steampowered.com/about/), a Steam account and network access. Steam must be running and the user must be logged in.
+基于 Steam Achievement Manager 的 Windows 二次开发项目，计划通过纯文本清单批量编辑游戏统计数据，并提供受字段约束的分步提交功能。
 
-This is the code for SAM. The closed-source version originally released in 2008, last major release in 2011, and last updated in 2013 (a hotfix).
+[需求方案](./docs/requirements.md) · [English](./README.en.md)
 
-The code is being made available so that those interested can do as they like with it.
+## 功能
 
-There are some changes to the code since the last closed-source release:
-- General code maintenance to bring it into a more modern state.
-- Icons have been replaced with ones from the Fugue Icons set.
-- Version has been bumped to 7.0.x.x to indicate the open-source release.
+**当前处于设计阶段，以下新增功能尚未实现。** 仓库代码保留上游原版基线，本次只建立项目与方案，不提供新增功能的构建产物。
 
-[Download latest release](https://github.com/gibbed/SteamAchievementManager/releases/latest).
+- 从 SAM 当前实际读取的字段定义和值导出 UTF-8 纯文本清单，附带类型、范围和限制说明。
+- 用户或 AI 修改 `字段ID = 目标值`，导入后先查看差异，再填入统计数据界面；导入本身不提交到 Steam。
+- 校验游戏 App ID、字段、重复项、数值类型与实际限制；未知或无效内容阻断整份导入。
+- 对受 `maxchange` 等条件约束的目标设计分步提交，等待回调并读回核验，支持进度、日志和停止。
 
-[![Build status](https://ci.appveyor.com/api/projects/status/00vic6jliar6j0ol/branch/master?svg=true)](https://ci.appveyor.com/project/gibbed/steamachievementmanager/branch/master)
+## 使用
 
-## Attribution
+### 阅读方案
 
-Most (if not all) icons are from the [Fugue Icons](https://p.yusukekamiyamane.com/) set.
+- [需求与验收范围](./docs/requirements.md)：用户流程、功能边界与后续验证要求。
+- [清单格式](./docs/text-format.md)：文本语法、导出内容和导入校验。
+- [分步提交设计](./docs/submission-design.md)：约束解释、状态机、间隔与失败处理。
+- [Steam 官方提交机制研究](./docs/steam-submission-research.md)：频率建议、错误码、修正值读取与自适应重试。
+
+目标平台为 Windows，计划沿用上游 C#、.NET Framework 4.8 和 Windows Forms。未来运行需要已登录的 Steam 客户端和网络连接。新增功能的使用和构建步骤将在实现并验证后补充。
+
+用户的个人统计清单仅作为需求参考，保留在用户本机，不纳入本仓库。设计以每次从 SAM 实际读取的游戏字段为准，不固定 CS2 字段数量，不以人工整理的示例作为完整字段表。
+
+### 后续验证
+
+实现后需要完成纯文本解析、约束检查和步进计划的离线测试，以及 Windows 构建与界面验证。涉及真实 Steam 账户的读写验收，应先展示具体测试字段、原值、目标值与预计影响，由用户确认后进行小范围验证。当前未声称这些检查已完成。
+
+## 说明
+
+导出、编辑和导入预览计划在本机完成；只有独立的提交操作才请求写入 Steam。`0` 是有效目标值，遗漏字段表示保持不变。受保护、权限受限、由可信服务器设置和平均速率字段计划只读；编辑文本注释不能放宽实际字段限制。
+
+Steam 对 `maxchange` 的定义涉及相邻 `SetStat` 调用之间的变化量，不能直接解释为“每次成功存储都可永久累加的额度”。分步策略需要结合实际字段定义、提交回调和读回结果验证，不能承诺目标一定被服务器接受。
+
+提交间隔暂以 120 秒作为设计建议起点。已核对的官方文档建议分钟级调用，但没有公布最快速度或固定间隔。计划研究分钟级请求间隔、按错误分类退避和按读回值重新计算；可保证的最短间隔目前未知。耗时按实际差值、可行步幅与间隔估算。停止只阻止后续轮次，已经发出的请求仍可能完成，已写入数据不会自动撤销。
+
+本项目不绕过服务器校验，不保证数值可恢复，也不保证兼容 Steam 或游戏今后的接口变化。游戏与 Steam 的规则仍然适用。详细行为见分步提交设计。
+
+## 版权说明
+
+本项目基于 [Steam Achievement Manager](https://github.com/gibbed/SteamAchievementManager)，上游作者为 Rick（Gibbed），起始提交为 `de8b71048a0cee3c3e97cd8535e0f55ca86513e4`。当前程序源代码保持该原版基线；新增项目文档明确记录后续修改计划。保留上游 [zlib 许可证](./LICENSE.txt)与版权声明，本项目原创文档按同一许可证提供。
+
+保留的 [Fugue Icons](https://p.yusukekamiyamane.com/) 由 Yusuke Kamiyamane 创作，适用 [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)。详细归属见 [NOTICE.md](./NOTICE.md)。Steam、Valve、游戏名称和素材属于各自权利人；本项目不是 Valve 官方软件，与 Valve 无隶属或认可关系。
