@@ -73,12 +73,24 @@ Assert-File (Join-Path $referenceRoot 'Reference Assemblies\Microsoft\Framework\
 
 foreach ($project in @(
     'SAM.sln',
+    'SAM.Launcher/SAM.Launcher.csproj',
     'SAM.Batch.Tests/SAM.Batch.Tests.csproj',
     'tests/SAM.Submission.Tests/SAM.Submission.Tests.csproj',
     'SAM.UiChecks/SAM.UiChecks.csproj'
 )) {
     Assert-File (Join-Path $repositoryPath $project)
 }
+
+[xml]$launcherProject = Get-Content -LiteralPath (Join-Path $repositoryPath 'SAM.Launcher/SAM.Launcher.csproj') -Raw
+$versionNodes = @($launcherProject.SelectNodes('/Project/PropertyGroup/Version'))
+if ($versionNodes.Count -ne 1) {
+    throw 'The launcher project must declare exactly one package version.'
+}
+$packageVersion = $versionNodes[0].InnerText.Trim()
+if ($packageVersion -cnotmatch '\A(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\z') {
+    throw "Package version must use major.minor.patch with no leading zeros: $packageVersion"
+}
+$archiveRootName = "steam-stats-editor-v$packageVersion-windows-x86"
 
 if ([string]::IsNullOrWhiteSpace($ArtifactDirectory)) {
     $ArtifactDirectory = Join-Path $repositoryPath 'artifacts'
@@ -225,7 +237,7 @@ try {
     }
 
     # Every shipped entry is explicit. Dependencies stay beside the original executables;
-    # the root has only the launcher and the app/ and licenses/ directories.
+    # the application folder has only the launcher and the app/ and licenses/ directories.
     $packageRelativePaths = @($launcherName) +
         @($requiredApplicationNames | ForEach-Object { "app/$_" }) +
         @('licenses/LICENSE.txt', 'licenses/NOTICE.md', 'licenses/ThirdPartyNotices.txt')
@@ -247,13 +259,16 @@ try {
         throw 'Package contents differ from the explicit file allowlist.'
     }
 
+    # A single versioned directory prevents extraction from scattering files into
+    # the destination. Keep the outer ZIP filename stable for the CI artifact path.
+    $archiveRelativePaths = @($packageRelativePaths | ForEach-Object { "$archiveRootName/$_" })
     $zipPath = Join-Path $runPath 'steam-stats-editor-windows.zip'
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [IO.Compression.ZipFile]::Open($zipPath, [IO.Compression.ZipArchiveMode]::Create)
     try {
         foreach ($relativePath in $packageRelativePaths) {
             [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
-                $archive, (Join-Path $packagePath $relativePath), $relativePath, [IO.Compression.CompressionLevel]::Optimal)
+                $archive, (Join-Path $packagePath $relativePath), "$archiveRootName/$relativePath", [IO.Compression.CompressionLevel]::Optimal)
         }
     }
     finally {
@@ -262,7 +277,7 @@ try {
     $archive = [IO.Compression.ZipFile]::OpenRead($zipPath)
     try {
         $zipNames = @($archive.Entries | ForEach-Object { $_.FullName })
-        if (@(Compare-Object -ReferenceObject $packageRelativePaths -DifferenceObject $zipNames -CaseSensitive).Count -ne 0) {
+        if (@(Compare-Object -ReferenceObject $archiveRelativePaths -DifferenceObject $zipNames -CaseSensitive).Count -ne 0) {
             throw 'Archive entries differ from the reviewed package file list.'
         }
     }
@@ -274,11 +289,12 @@ try {
     # The calling working directory is deliberately outside the application bundle.
     $unpackedPath = Join-Path $runPath '解压 检查'
     [IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $unpackedPath)
+    $unpackedApplicationPath = Join-Path $unpackedPath $archiveRootName
     $checkOutputPath = Join-Path $packageCheckPath 'complete'
-    Invoke-PackageCheck -LauncherPath (Join-Path $unpackedPath $launcherName) -WorkingDirectory $runPath -OutputPath $checkOutputPath
+    Invoke-PackageCheck -LauncherPath (Join-Path $unpackedApplicationPath $launcherName) -WorkingDirectory $runPath -OutputPath $checkOutputPath
     $diagnostic = @(Get-Content -LiteralPath "$checkOutputPath.stdout.txt" -Encoding UTF8)
-    $expectedChild = Join-Path $unpackedPath 'app\SAM.Picker.exe'
-    $expectedWorkingDirectory = Join-Path $unpackedPath 'app'
+    $expectedChild = Join-Path $unpackedApplicationPath 'app\SAM.Picker.exe'
+    $expectedWorkingDirectory = Join-Path $unpackedApplicationPath 'app'
     if ($diagnostic -cnotcontains "Executable: $expectedChild" -or $diagnostic -cnotcontains "WorkingDirectory: $expectedWorkingDirectory") {
         throw 'Launcher did not resolve its child and working directory relative to its own executable.'
     }
@@ -338,7 +354,7 @@ internal static class LauncherFixture
     Remove-Item -LiteralPath (Join-Path $fixtureAppPath 'SAM.Batch.dll')
     Invoke-PackageCheck -LauncherPath (Join-Path $fixturePath $launcherName) -WorkingDirectory $runPath `
         -OutputPath (Join-Path $packageCheckPath 'incomplete') -ExpectedExitCode 2
-    [IO.File]::WriteAllLines((Join-Path $packageCheckPath 'package-files.txt'), $packageRelativePaths)
+    [IO.File]::WriteAllLines((Join-Path $packageCheckPath 'package-files.txt'), $archiveRelativePaths)
     Write-Host "Package: $zipPath"
     Write-Host "Launcher checks: $packageCheckPath"
     Write-Host "Offline UI screenshots: $uiArtifactPath"

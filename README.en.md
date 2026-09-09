@@ -21,7 +21,7 @@ Retains SAM's game picker, achievement editing and statistics editing, with thes
 
 Requires Windows, .NET Framework 4.8, a running and signed-in Steam client, and network access. Running the application does not require the .NET SDK.
 
-1. Download the v1.0.0 Windows ZIP from [Releases](https://github.com/wyfang/steam-stats-editor/releases), extract it completely into a new writable folder and run `SteamStatsEditor.exe`. Keep the adjacent `app/` and `licenses/` directories.
+1. Download the v1.0.0 Windows ZIP from [Releases](https://github.com/wyfang/steam-stats-editor/releases), extract it completely to a writable location, open the folder named after the ZIP and run `SteamStatsEditor.exe`. Keep the adjacent `app/` and `licenses/` directories.
 2. Select a game and wait for its data. “导出 Steam 已读取值” exports values read from Steam for a backup; “导出界面目标值” exports the pending targets currently in the UI.
 3. Edit the target numbers after the equals signs, then use “导入清单” to review differences and apply them to the UI. Removing a line leaves that field unchanged; `0` is a valid target.
 4. Choose “提交一步” for one step or “自动分步” for automatic steps. Import changes only the UI; submission sends changes to Steam.

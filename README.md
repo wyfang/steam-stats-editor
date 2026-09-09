@@ -21,7 +21,7 @@
 
 需要 Windows、.NET Framework 4.8、已运行并登录的 Steam 客户端及网络连接。运行程序无需安装 .NET SDK。
 
-1. 从 [Releases](https://github.com/wyfang/steam-stats-editor/releases) 下载 v1.0.0 的 Windows ZIP，完整解压到可写的新文件夹，运行 `SteamStatsEditor.exe`。保留同级的 `app/` 和 `licenses/` 目录。
+1. 从 [Releases](https://github.com/wyfang/steam-stats-editor/releases) 下载 v1.0.0 的 Windows ZIP，完整解压到可写的位置，进入解压后的同名文件夹，运行 `SteamStatsEditor.exe`。保留同级的 `app/` 和 `licenses/` 目录。
 2. 选择游戏并等待读取完成。“导出 Steam 已读取值”可保存原值备份；“导出界面目标值”包含当前界面中的待提交数值。
 3. 修改清单等号右侧的目标数字，再“导入清单”，检查差异并填入界面。删除某行表示不修改该字段，`0` 是有效目标。
 4. 选择“提交一步”或“自动分步”。导入只改变界面，提交才会向 Steam 发送修改。
