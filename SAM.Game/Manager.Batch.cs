@@ -29,8 +29,6 @@ namespace SAM.Game
         {
             int titleSeparator = this.Text.IndexOf(" | ", StringComparison.Ordinal);
             this.Text = "Steam Stats Editor · 统计清单" + (titleSeparator >= 0 ? this.Text.Substring(titleSeparator) : "");
-            this.MinimumSize = new Size(1080, 660);
-            this.Size = new Size(1180, 780);
             this._MainTabControl.SelectedTab = this._StatisticsTabPage;
             this._StatisticsTabPage.Text = "统计数据";
             this._AchievementsTabPage.Text = "成就（SAM）";
@@ -68,12 +66,7 @@ namespace SAM.Game
             this._BatchStopButton = new ToolStripButton("停止后续轮次", null, (s, e) => this.StopBatchSubmission()) { Enabled = false };
             this._BatchIntervalBox = new ToolStripTextBox { Text = "120", AutoSize = false, Width = 48, ToolTipText = "每轮间隔，单位秒；最少 60 秒，默认 120 秒。" };
             this._BatchLogButton = new ToolStripButton("日志…", null, (s, e) => this.ShowBatchLog());
-            this._MainToolStrip.Items.AddRange(new ToolStripItem[]
-            {
-                new ToolStripSeparator(), this._BatchExportButton, this._BatchImportButton,
-                new ToolStripSeparator(), this._BatchOnceButton, this._BatchStartButton,
-                new ToolStripLabel("间隔/秒"), this._BatchIntervalBox, this._BatchStopButton, this._BatchLogButton,
-            });
+            this.InitializeManagerLayout();
             this.SetBatchControlsEnabled(false);
         }
 
@@ -257,11 +250,11 @@ namespace SAM.Game
         private void ShowBatchLog()
         {
             if (this._BatchLogWindow != null) { this._BatchLogWindow.Activate(); return; }
-            var dialog = new Form { Text = "提交日志 · 实时更新", Width = 960, Height = 580, StartPosition = FormStartPosition.CenterParent, MinimizeBox = false, MaximizeBox = true };
+            var dialog = new Form { Text = "提交日志 · 实时更新", Width = 960, Height = 580, MinimumSize = new Size(640, 400), Font = this.Font, Padding = new Padding(16), StartPosition = FormStartPosition.CenterParent, MinimizeBox = false, MaximizeBox = true };
             var text = new TextBox { Dock = DockStyle.Fill, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Both, WordWrap = false, Font = new Font("Consolas", 10), Text = string.Join(Environment.NewLine, this._BatchLogLines) };
-            var footer = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 46, Padding = new Padding(6), FlowDirection = FlowDirection.RightToLeft };
-            var save = new Button { Text = "保存日志…", Width = 120, Height = 30 };
-            var stop = new Button { Text = "停止后续轮次", Width = 160, Height = 30, Enabled = this.SubmissionCanStop };
+            var footer = new FlowLayoutPanel { Dock = DockStyle.Bottom, AutoSize = true, Padding = new Padding(0, 16, 0, 0), FlowDirection = FlowDirection.RightToLeft };
+            var save = new Button { Text = "保存日志…", Width = 120, Height = 38, Margin = new Padding(12, 0, 0, 0) };
+            var stop = new Button { Text = "停止后续轮次", Width = 160, Height = 38, Margin = Padding.Empty, Enabled = this.SubmissionCanStop };
             stop.Click += (s, e) => this.StopBatchSubmission();
             save.Click += (s, e) =>
             {

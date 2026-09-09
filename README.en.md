@@ -8,7 +8,7 @@ A Windows project based on Steam Achievement Manager for bulk editing of game st
 
 The first version under development implements statistics export, validated text import with a difference preview, UI target values, single-step and automatic staged submission, and live logs. Values are read again after the stored callback; temporary errors have bounded backoff, and uncertain results stop the operation.
 
-All 70 logic tests, GitHub Windows x86 builds and offline UI checks with synthetic data have passed. Real Steam reads, writes and rate limits still need testing on an actual account. Test packages are currently available.
+All 70 logic tests, GitHub Windows x86 builds and offline UI checks with synthetic data have passed. A user has reported successful CS2 statistics reads and edits on Windows. This does not establish support for every game or field, and actual rate limits remain unmeasured. Test packages are currently available.
 
 ## Usage
 
@@ -16,7 +16,9 @@ The target environment is Windows with .NET Framework 4.8. A running, signed-in 
 
 While signed in to GitHub, download the `steam-stats-editor-windows` artifact from a successful [Windows build](https://github.com/wyfang/steam-stats-editor/actions/workflows/windows.yml) run, then extract the application ZIP inside. Artifacts are retained for 14 days. Testing the application does not require the .NET SDK.
 
-Select a game in `SAM.Picker.exe` and wait for its data. Use “导出清单” to export, edit the target numbers after the equals signs, then use “导入清单” to review differences and apply targets to the UI. Import does not write to Steam. Choose “提交一步” for one step or “自动分步” for automatic steps afterward. Removing a line leaves that field unchanged; `0` is a valid target.
+Open `SteamStatsEditor.exe`, select a game, and wait for its data. Use “导出清单” to export, edit the target numbers after the equals signs, then use “导入清单” to review differences and apply targets to the UI. Import does not write to Steam. Choose “提交一步” for one step or “自动分步” for automatic steps afterward. Removing a line leaves that field unchanged; `0` is a valid target.
+
+The package root contains only the launcher, `app/` and `licenses/`. Internal programs and runtime dependencies stay in `app/`; license notices stay in `licenses/`. Extract the entire package into a new folder and keep both directories. A desktop shortcut may point to `SteamStatsEditor.exe`.
 
 Building requires Windows, the .NET 8 SDK, MSBuild from Visual Studio 2022 Build Tools, and the .NET Framework 4.8 targeting pack. Run in Developer PowerShell:
 
@@ -24,7 +26,7 @@ Building requires Windows, the .NET 8 SDK, MSBuild from Visual Studio 2022 Build
 ./scripts/build-windows.ps1
 ```
 
-The script runs logic tests, builds x86 applications, renders import previews with synthetic data, and creates a ZIP in `artifacts/windows-*/`. UI checks do not connect to Steam. Extract all dependency files alongside `SAM.Picker.exe`.
+The script runs logic tests, builds x86 applications, checks the game picker, statistics window, import preview and launcher paths, and creates a ZIP in `artifacts/windows-*/`. UI and packaging checks do not connect to Steam.
 
 ## Notes
 

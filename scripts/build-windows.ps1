@@ -26,6 +26,34 @@ function Assert-File {
     }
 }
 
+function Invoke-PackageCheck {
+    param(
+        [Parameter(Mandatory = $true)][string]$LauncherPath,
+        [Parameter(Mandatory = $true)][string]$WorkingDirectory,
+        [Parameter(Mandatory = $true)][string]$OutputPath,
+        [int]$ExpectedExitCode = 0,
+        [switch]$LaunchFixture
+    )
+    $startParameters = @{
+        FilePath = $LauncherPath
+        WorkingDirectory = $WorkingDirectory
+        PassThru = $true
+        RedirectStandardOutput = "$OutputPath.stdout.txt"
+        RedirectStandardError = "$OutputPath.stderr.txt"
+    }
+    if (-not $LaunchFixture) { $startParameters.ArgumentList = '--check-package' }
+    $process = Start-Process @startParameters
+    [void]$process.Handle
+    if (-not $process.WaitForExit(10000)) {
+        & taskkill.exe /PID $process.Id /T /F | Out-Null
+        throw 'Launcher package check exceeded 10 seconds; its process tree was terminated.'
+    }
+    $process.WaitForExit()
+    if ($process.ExitCode -ne $ExpectedExitCode) {
+        throw "Launcher check returned $($process.ExitCode), expected $ExpectedExitCode. See $OutputPath.stderr.txt."
+    }
+}
+
 if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
     throw 'This script requires Windows. It does not install build tools.'
 }
@@ -65,7 +93,10 @@ $runPath = Join-Path $ArtifactDirectory $runName
 $uiArtifactPath = Join-Path $runPath 'ui'
 $uiBuildPath = Join-Path $runPath 'ui-build'
 $packagePath = Join-Path $runPath 'package'
-New-Item -ItemType Directory -Path $uiArtifactPath, $uiBuildPath, $packagePath | Out-Null
+$applicationPath = Join-Path $packagePath 'app'
+$licensePath = Join-Path $packagePath 'licenses'
+$packageCheckPath = Join-Path $runPath 'package-checks'
+New-Item -ItemType Directory -Path $uiArtifactPath, $uiBuildPath, $applicationPath, $licensePath, $packageCheckPath | Out-Null
 
 Push-Location $repositoryPath
 try {
@@ -103,7 +134,10 @@ try {
     }
     foreach ($screenshot in @(
         'preview-valid-1140.png', 'preview-valid-900.png',
-        'preview-invalid-1140.png', 'preview-invalid-900.png'
+        'preview-invalid-1140.png', 'preview-invalid-900.png',
+        'picker-default.png', 'picker-minimum.png', 'picker-scale150-simulated.png',
+        'manager-default.png', 'manager-minimum.png', 'manager-minimum-running.png',
+        'manager-achievements-minimum.png', 'manager-scale150-simulated.png'
     )) {
         Assert-File (Join-Path $uiArtifactPath $screenshot)
     }
@@ -114,10 +148,10 @@ try {
         'System.Resources.Extensions.dll', 'System.Memory.dll', 'System.Buffers.dll',
         'System.Runtime.CompilerServices.Unsafe.dll', 'System.Numerics.Vectors.dll'
     )
-    $requiredApplicationNames = @(
-        'SAM.Picker.exe', 'SAM.Game.exe', 'SAM.Picker.exe.config', 'SAM.Game.exe.config',
-        'SAM.API.dll', 'SAM.Batch.dll', 'SAM.Submission.dll'
-    )
+    $launcherName = 'SteamStatsEditor.exe'
+    Assert-File (Join-Path $uploadPath $launcherName)
+    $applicationNames = @('SAM.Picker.exe', 'SAM.Game.exe', 'SAM.Picker.exe.config', 'SAM.Game.exe.config')
+    $requiredApplicationNames = @($applicationNames + $allowedDllNames)
     foreach ($name in $requiredApplicationNames) {
         Assert-File (Join-Path $uploadPath $name)
     }
@@ -171,7 +205,7 @@ try {
             }
         }
     }
-    [IO.File]::WriteAllText((Join-Path $packagePath 'ThirdPartyNotices.txt'), $notices.ToString(), (New-Object System.Text.UTF8Encoding($false)))
+    [IO.File]::WriteAllText((Join-Path $licensePath 'ThirdPartyNotices.txt'), $notices.ToString(), (New-Object System.Text.UTF8Encoding($false)))
 
     $dllFiles = @(Get-ChildItem -LiteralPath $uploadPath -File -Filter '*.dll')
     foreach ($dll in $dllFiles) {
@@ -179,34 +213,134 @@ try {
             throw "Unexpected DLL in upload; review it before packaging: $($dll.Name)"
         }
     }
-    $applicationNames = @('SAM.Picker.exe', 'SAM.Game.exe', 'SAM.Picker.exe.config', 'SAM.Game.exe.config')
-    foreach ($name in ($applicationNames + $allowedDllNames)) {
+    Copy-Item -LiteralPath (Join-Path $uploadPath $launcherName) -Destination $packagePath
+    foreach ($name in $requiredApplicationNames) {
         $sourcePath = Join-Path $uploadPath $name
-        if (Test-Path -LiteralPath $sourcePath -PathType Leaf) {
-            Copy-Item -LiteralPath $sourcePath -Destination $packagePath
-        }
+        Copy-Item -LiteralPath $sourcePath -Destination $applicationPath
     }
-    foreach ($name in @('LICENSE.txt', 'NOTICE.md', 'README.md', 'README.en.md')) {
+    foreach ($name in @('LICENSE.txt', 'NOTICE.md')) {
         $sourcePath = Join-Path $repositoryPath $name
         Assert-File $sourcePath
-        Copy-Item -LiteralPath $sourcePath -Destination $packagePath
+        Copy-Item -LiteralPath $sourcePath -Destination $licensePath
     }
 
-    $packageFiles = @(Get-ChildItem -LiteralPath $packagePath -File)
+    # Every shipped entry is explicit. Dependencies stay beside the original executables;
+    # the root has only the launcher and the app/ and licenses/ directories.
+    $packageRelativePaths = @($launcherName) +
+        @($requiredApplicationNames | ForEach-Object { "app/$_" }) +
+        @('licenses/LICENSE.txt', 'licenses/NOTICE.md', 'licenses/ThirdPartyNotices.txt')
+    $actualRelativePaths = @()
+    foreach ($directory in @('', 'app', 'licenses')) {
+        $directoryPath = if ($directory -eq '') { $packagePath } else { Join-Path $packagePath $directory }
+        foreach ($entry in @(Get-ChildItem -LiteralPath $directoryPath -Force)) {
+            if ($entry.PSIsContainer) {
+                if ($directory -ne '' -or @('app', 'licenses') -cnotcontains $entry.Name) {
+                    throw "Unexpected package directory: $($entry.FullName)"
+                }
+            }
+            else {
+                $actualRelativePaths += if ($directory -eq '') { $entry.Name } else { "$directory/$($entry.Name)" }
+            }
+        }
+    }
+    if (@(Compare-Object -ReferenceObject $packageRelativePaths -DifferenceObject $actualRelativePaths -CaseSensitive).Count -ne 0) {
+        throw 'Package contents differ from the explicit file allowlist.'
+    }
+
     $zipPath = Join-Path $runPath 'steam-stats-editor-windows.zip'
-    Compress-Archive -LiteralPath $packageFiles.FullName -DestinationPath $zipPath -CompressionLevel Optimal
     Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [IO.Compression.ZipFile]::Open($zipPath, [IO.Compression.ZipArchiveMode]::Create)
+    try {
+        foreach ($relativePath in $packageRelativePaths) {
+            [void][IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                $archive, (Join-Path $packagePath $relativePath), $relativePath, [IO.Compression.CompressionLevel]::Optimal)
+        }
+    }
+    finally {
+        $archive.Dispose()
+    }
     $archive = [IO.Compression.ZipFile]::OpenRead($zipPath)
     try {
         $zipNames = @($archive.Entries | ForEach-Object { $_.FullName })
-        if (@(Compare-Object -ReferenceObject $packageFiles.Name -DifferenceObject $zipNames -CaseSensitive).Count -ne 0) {
+        if (@(Compare-Object -ReferenceObject $packageRelativePaths -DifferenceObject $zipNames -CaseSensitive).Count -ne 0) {
             throw 'Archive entries differ from the reviewed package file list.'
         }
     }
     finally {
         $archive.Dispose()
     }
+
+    # Exercise the actual ZIP after extraction into a path with spaces and Unicode.
+    # The calling working directory is deliberately outside the application bundle.
+    $unpackedPath = Join-Path $runPath '解压 检查'
+    [IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $unpackedPath)
+    $checkOutputPath = Join-Path $packageCheckPath 'complete'
+    Invoke-PackageCheck -LauncherPath (Join-Path $unpackedPath $launcherName) -WorkingDirectory $runPath -OutputPath $checkOutputPath
+    $diagnostic = @(Get-Content -LiteralPath "$checkOutputPath.stdout.txt" -Encoding UTF8)
+    $expectedChild = Join-Path $unpackedPath 'app\SAM.Picker.exe'
+    $expectedWorkingDirectory = Join-Path $unpackedPath 'app'
+    if ($diagnostic -cnotcontains "Executable: $expectedChild" -or $diagnostic -cnotcontains "WorkingDirectory: $expectedWorkingDirectory") {
+        throw 'Launcher did not resolve its child and working directory relative to its own executable.'
+    }
+
+    # Compile a harmless .NET Framework child in a separate bundle. Launch the real
+    # bootstrapper against this fixture to check Process.Start, including its cwd.
+    # No real Steam executable is launched by these package checks.
+    $fixturePath = Join-Path $runPath 'launcher fixture 中文'
+    $fixtureAppPath = Join-Path $fixturePath 'app'
+    New-Item -ItemType Directory -Path $fixtureAppPath | Out-Null
+    Copy-Item -LiteralPath (Join-Path $packagePath $launcherName) -Destination $fixturePath
+    foreach ($name in $requiredApplicationNames) {
+        Copy-Item -LiteralPath (Join-Path $applicationPath $name) -Destination $fixtureAppPath
+    }
+    $fixtureSource = Join-Path $runPath 'LauncherFixture.cs'
+    $fixtureResultPath = Join-Path $packageCheckPath 'child-result.txt'
+    $fixtureCode = @'
+using System;
+using System.IO;
+using System.Reflection;
+internal static class LauncherFixture
+{
+    private static int Main()
+    {
+        string result = Environment.GetEnvironmentVariable("STEAM_STATS_EDITOR_SMOKE_RESULT");
+        File.WriteAllLines(result + ".tmp",
+            new[] { Assembly.GetExecutingAssembly().Location, Environment.CurrentDirectory });
+        File.Move(result + ".tmp", result);
+        return 0;
+    }
+}
+'@
+    [IO.File]::WriteAllText($fixtureSource, $fixtureCode, (New-Object System.Text.UTF8Encoding($false)))
+    $compilerPath = Join-Path ([Environment]::GetEnvironmentVariable('WINDIR')) 'Microsoft.NET\Framework\v4.0.30319\csc.exe'
+    Assert-File $compilerPath
+    Invoke-CheckedCommand $compilerPath @('/nologo', '/target:winexe', '/platform:x86', "/out:$(Join-Path $fixtureAppPath 'SAM.Picker.exe')", $fixtureSource)
+    $previousFixtureResult = [Environment]::GetEnvironmentVariable('STEAM_STATS_EDITOR_SMOKE_RESULT')
+    try {
+        [Environment]::SetEnvironmentVariable('STEAM_STATS_EDITOR_SMOKE_RESULT', $fixtureResultPath)
+        Invoke-PackageCheck -LauncherPath (Join-Path $fixturePath $launcherName) -WorkingDirectory $runPath `
+            -OutputPath (Join-Path $packageCheckPath 'launch') -LaunchFixture
+        $deadline = [DateTime]::UtcNow.AddSeconds(10)
+        while (-not (Test-Path -LiteralPath $fixtureResultPath -PathType Leaf) -and [DateTime]::UtcNow -lt $deadline) {
+            Start-Sleep -Milliseconds 100
+        }
+        Assert-File $fixtureResultPath
+        $childResult = @(Get-Content -LiteralPath $fixtureResultPath -Encoding UTF8)
+        if ($childResult.Count -ne 2 -or $childResult[0] -cne (Join-Path $fixtureAppPath 'SAM.Picker.exe') -or $childResult[1] -cne $fixtureAppPath) {
+            throw 'Launcher fixture started with the wrong executable or working directory.'
+        }
+    }
+    finally {
+        [Environment]::SetEnvironmentVariable('STEAM_STATS_EDITOR_SMOKE_RESULT', $previousFixtureResult)
+    }
+
+    # A missing dependency must be reported instead of launching a broken program.
+    Remove-Item -LiteralPath (Join-Path $fixtureAppPath 'SAM.Batch.dll')
+    Invoke-PackageCheck -LauncherPath (Join-Path $fixturePath $launcherName) -WorkingDirectory $runPath `
+        -OutputPath (Join-Path $packageCheckPath 'incomplete') -ExpectedExitCode 2
+    [IO.File]::WriteAllLines((Join-Path $packageCheckPath 'package-files.txt'), $packageRelativePaths)
     Write-Host "Package: $zipPath"
+    Write-Host "Launcher checks: $packageCheckPath"
     Write-Host "Offline UI screenshots: $uiArtifactPath"
     Write-Host 'Offline checks do not establish compatibility or successful writes with a real Steam account.'
 }

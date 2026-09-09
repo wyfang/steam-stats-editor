@@ -8,7 +8,7 @@
 
 开发中的第一版已实现：导出实际统计清单、导入校验与差异预览、填入界面目标值、提交一步、自动分步和实时日志。保存回调后重新读取数值；暂时错误有限退避，结果不明时停止。
 
-已通过 70 项逻辑测试、GitHub Windows x86 构建及合成数据的离线界面检查。真实 Steam 读取、提交和实际限速仍待实机验证，当前提供测试包。
+已通过 70 项逻辑测试、GitHub Windows x86 构建及合成数据的离线界面检查。已有用户反馈在 Windows 上成功读取和修改 CS2 统计；这不代表所有游戏和字段均可修改，实际限速仍未测定，当前提供测试包。
 
 ## 使用
 
@@ -16,7 +16,9 @@
 
 登录 GitHub 后，从成功的 [Windows build](https://github.com/wyfang/steam-stats-editor/actions/workflows/windows.yml) 运行页面下载 `steam-stats-editor-windows` artifact，再解压其中的程序 ZIP。构建产物保留 14 天；测试时无需安装 .NET SDK。
 
-从 `SAM.Picker.exe` 选择游戏，等待读取完成。点击“导出清单”，修改文本中等号右侧的目标数字，再用“导入清单”检查差异并填入界面。导入本身不会写入 Steam；随后选择“提交一步”或“自动分步”。删除某行表示不修改该字段，`0` 是有效目标。
+双击 `SteamStatsEditor.exe`，选择游戏并等待读取完成。点击“导出清单”，修改文本中等号右侧的目标数字，再用“导入清单”检查差异并填入界面。导入本身不会写入 Steam；随后选择“提交一步”或“自动分步”。删除某行表示不修改该字段，`0` 是有效目标。
+
+程序包顶层只有启动程序、`app/` 和 `licenses/`：`app/` 保存内部程序及运行依赖，`licenses/` 保存许可声明。请完整解压到新文件夹，保留这两个目录；桌面快捷方式可以指向 `SteamStatsEditor.exe`。
 
 构建需要 Windows、.NET 8 SDK、Visual Studio 2022 Build Tools 的 MSBuild 与 .NET Framework 4.8 targeting pack。在 Developer PowerShell 中执行：
 
@@ -24,7 +26,7 @@
 ./scripts/build-windows.ps1
 ```
 
-脚本运行逻辑测试、编译 x86 程序、渲染合成数据的导入预览，并在 `artifacts/windows-*/` 生成 ZIP。界面检查不连接 Steam。解压后保留所有依赖文件，与 `SAM.Picker.exe` 放在一起。
+脚本运行逻辑测试、编译 x86 程序、检查游戏选择／统计／导入预览界面和启动目录，并在 `artifacts/windows-*/` 生成 ZIP。界面与打包检查不连接 Steam。
 
 ## 说明
 

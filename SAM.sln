@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SAM.Batch", "SAM.Batch\SAM.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SAM.Submission", "SAM.Submission\SAM.Submission.csproj", "{3A2C8ECD-1DE1-49AD-9744-098DB2BC4F16}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SAM.Launcher", "SAM.Launcher\SAM.Launcher.csproj", "{7A0B08D4-2739-4BBA-8E3C-7DBD0E3D2A9F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -39,6 +41,10 @@ Global
 		{3A2C8ECD-1DE1-49AD-9744-098DB2BC4F16}.Debug|x86.Build.0 = Debug|Any CPU
 		{3A2C8ECD-1DE1-49AD-9744-098DB2BC4F16}.Release|x86.ActiveCfg = Release|Any CPU
 		{3A2C8ECD-1DE1-49AD-9744-098DB2BC4F16}.Release|x86.Build.0 = Release|Any CPU
+		{7A0B08D4-2739-4BBA-8E3C-7DBD0E3D2A9F}.Debug|x86.ActiveCfg = Debug|x86
+		{7A0B08D4-2739-4BBA-8E3C-7DBD0E3D2A9F}.Debug|x86.Build.0 = Debug|x86
+		{7A0B08D4-2739-4BBA-8E3C-7DBD0E3D2A9F}.Release|x86.ActiveCfg = Release|x86
+		{7A0B08D4-2739-4BBA-8E3C-7DBD0E3D2A9F}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

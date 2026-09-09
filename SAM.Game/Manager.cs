@@ -51,9 +51,17 @@ namespace SAM.Game
 
         private readonly API.Callbacks.UserStatsReceived _UserStatsReceivedCallback;
 
-        public Manager(long gameId, API.Client client)
+        public Manager(long gameId, API.Client client) : this(gameId, client, false)
         {
+        }
+
+        private readonly bool _OfflinePreview;
+
+        private Manager(long gameId, API.Client client, bool offlinePreview)
+        {
+            this._OfflinePreview = offlinePreview;
             this.InitializeComponent();
+            if (offlinePreview) this._CallbackTimer.Stop();
 
             this._MainTabControl.SelectedTab = this._AchievementsTabPage;
             //this.statisticsList.Enabled = this.checkBox1.Checked;
@@ -84,6 +92,13 @@ namespace SAM.Game
 
             this._GameId = gameId;
             this._SteamClient = client;
+
+            if (offlinePreview)
+            {
+                this.InitializeBatchUi();
+                this.InitializeOfflinePreview();
+                return;
+            }
 
             this._IconDownloader.DownloadDataCompleted += this.OnIconDownload;
 

@@ -23,7 +23,7 @@ Steam Stats Editor 是由 wyfang 维护的 Steam Achievement Manager 二次开�
 
 ## 运行依赖
 
-Windows 构建使用 Microsoft 的 `System.Resources.Extensions` 及其 `System.Memory`、`System.Buffers`、`System.Numerics.Vectors`、`System.Runtime.CompilerServices.Unsafe` 依赖，适用各 NuGet 包中的 MIT 许可及第三方声明。构建脚本将实际解析版本的完整许可与声明汇总到发行包的 `ThirdPartyNotices.txt`；这些依赖不改按本项目的 zlib 许可授权。
+Windows 构建使用 Microsoft 的 `System.Resources.Extensions` 及其 `System.Memory`、`System.Buffers`、`System.Numerics.Vectors`、`System.Runtime.CompilerServices.Unsafe` 依赖，适用各 NuGet 包中的 MIT 许可及第三方声明。构建脚本将实际解析版本的完整许可与声明汇总到发行包的 `licenses/ThirdPartyNotices.txt`；这些依赖不改按本项目的 zlib 许可授权。
 
 ## 商标与数据
 

@@ -9,10 +9,7 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Drawing" />
     <ProjectReference Include="../SAM.Batch/SAM.Batch.csproj" />
-    <Compile Include="../SAM.Game/BatchPreviewDialog.cs" Link="BatchPreviewDialog.cs" />
-    <Compile Include="../SAM.Game/Stats/FloatStatInfo.cs" Link="Stats/FloatStatInfo.cs" />
-    <Compile Include="../SAM.Game/Stats/StatInfo.cs" Link="Stats/StatInfo.cs" />
-    <Compile Include="../SAM.Game/Stats/StatFlags.cs" Link="Stats/StatFlags.cs" />
-    <Compile Include="../SAM.Game/Stats/StatIsProtectedException.cs" Link="Stats/StatIsProtectedException.cs" />
+    <ProjectReference Include="../SAM.Game/SAM.Game.csproj" />
+    <ProjectReference Include="../SAM.Picker/SAM.Picker.csproj" />
   </ItemGroup>
 </Project>

@@ -20,6 +20,8 @@
  *    distribution.
  */
 
+// Modified for Steam Stats Editor: spaced game selection UI and an offline layout preview.
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -40,6 +42,7 @@ namespace SAM.Picker
     internal partial class GamePicker : Form
     {
         private readonly API.Client _SteamClient;
+        private readonly bool _OfflinePreview;
 
         private readonly Dictionary<uint, GameInfo> _Games;
         private readonly List<GameInfo> _FilteredGames;
@@ -52,7 +55,13 @@ namespace SAM.Picker
         private readonly API.Callbacks.AppDataChanged _AppDataChangedCallback;
 
         public GamePicker(API.Client client)
+            : this(client, false)
         {
+        }
+
+        private GamePicker(API.Client client, bool offlinePreview)
+        {
+            this._OfflinePreview = offlinePreview;
             this._Games = new();
             this._FilteredGames = new();
             this._LogoLock = new();
@@ -61,6 +70,7 @@ namespace SAM.Picker
             this._LogoQueue = new();
 
             this.InitializeComponent();
+            this.InitializeModernPickerLayout();
 
             Bitmap blank = new(this._LogoImageList.ImageSize.Width, this._LogoImageList.ImageSize.Height);
             using (var g = Graphics.FromImage(blank))
@@ -72,11 +82,24 @@ namespace SAM.Picker
 
             this._SteamClient = client;
 
+            if (offlinePreview)
+            {
+                this._CallbackTimer.Enabled = false;
+                this._Games.Add(730, new GameInfo(730, "normal") { Name = "Counter-Strike 2" });
+                this._Games.Add(480, new GameInfo(480, "normal") { Name = "Spacewar（离线示例）" });
+                this._Games.Add(620, new GameInfo(620, "normal") { Name = "Portal 2（离线示例）" });
+                this.RefreshGames();
+                return;
+            }
+
             this._AppDataChangedCallback = client.CreateAndRegisterCallback<API.Callbacks.AppDataChanged>();
             this._AppDataChangedCallback.OnRun += this.OnAppDataChanged;
 
             this.AddGames();
         }
+
+        // Constructs the real layout without creating a Steam client or requesting network data.
+        internal static GamePicker CreateOfflinePreview() => new(null, true);
 
         private void OnAppDataChanged(APITypes.AppDataChanged param)
         {
@@ -98,7 +121,7 @@ namespace SAM.Picker
 
         private void DoDownloadList(object sender, DoWorkEventArgs e)
         {
-            this._PickerStatusLabel.Text = "Downloading game list...";
+            this._PickerStatusLabel.Text = "正在下载游戏列表…";
 
             byte[] bytes;
             using (WebClient downloader = new())
@@ -123,7 +146,7 @@ namespace SAM.Picker
                 }
             }
 
-            this._PickerStatusLabel.Text = "Checking game ownership...";
+            this._PickerStatusLabel.Text = "正在检查已拥有的游戏…";
             foreach (var kv in pairs)
             {
                 this.AddGame(kv.Key, kv.Value);
@@ -181,7 +204,7 @@ namespace SAM.Picker
 
             this._GameListView.VirtualListSize = this._FilteredGames.Count;
             this._PickerStatusLabel.Text =
-                $"Displaying {this._GameListView.Items.Count} games. Total {this._Games.Count} games.";
+                $"显示 {this._GameListView.Items.Count} 个游戏，共 {this._Games.Count} 个。";
 
             if (this._GameListView.Items.Count > 0)
             {
@@ -197,6 +220,7 @@ namespace SAM.Picker
             {
                 Text = info.Name,
                 ImageIndex = info.ImageIndex,
+                ToolTipText = $"{info.Name}\nApp ID：{info.Id}",
             };
         }
 
@@ -328,7 +352,7 @@ namespace SAM.Picker
                     break;
                 }
 
-                this._DownloadStatusLabel.Text = $"Downloading {1 + this._LogoQueue.Count} game icons...";
+                this._DownloadStatusLabel.Text = $"正在下载游戏封面，还剩 {1 + this._LogoQueue.Count} 个…";
                 this._DownloadStatusLabel.Visible = true;
 
                 this._LogoWorker.RunWorkerAsync(info);
@@ -437,6 +461,10 @@ namespace SAM.Picker
 
         private void OnActivateGame(object sender, EventArgs e)
         {
+            if (this._OfflinePreview)
+            {
+                return;
+            }
             var focusedItem = (sender as MyListView)?.FocusedItem;
             var index = focusedItem != null ? focusedItem.Index : -1;
             if (index < 0 || index >= this._FilteredGames.Count)
@@ -452,14 +480,20 @@ namespace SAM.Picker
 
             try
             {
-                Process.Start("SAM.Game.exe", info.Id.ToString(CultureInfo.InvariantCulture));
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SAM.Game.exe"),
+                    WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory,
+                    Arguments = info.Id.ToString(CultureInfo.InvariantCulture),
+                    UseShellExecute = false,
+                });
             }
             catch (Win32Exception)
             {
                 MessageBox.Show(
                     this,
-                    "Failed to start SAM.Game.exe.",
-                    "Error",
+                    "无法启动游戏编辑器。请完整解压程序包后重试。",
+                    "启动失败",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
@@ -467,20 +501,29 @@ namespace SAM.Picker
 
         private void OnRefresh(object sender, EventArgs e)
         {
+            if (this._OfflinePreview)
+            {
+                this.RefreshGames();
+                return;
+            }
             this._AddGameTextBox.Text = "";
             this.AddGames();
         }
 
         private void OnAddGame(object sender, EventArgs e)
         {
+            if (this._OfflinePreview)
+            {
+                return;
+            }
             uint id;
 
             if (uint.TryParse(this._AddGameTextBox.Text, out id) == false)
             {
                 MessageBox.Show(
                     this,
-                    "Please enter a valid game ID.",
-                    "Error",
+                    "请输入有效的 App ID，例如 CS2 的 730。",
+                    "检查游戏编号",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 return;
@@ -488,7 +531,7 @@ namespace SAM.Picker
 
             if (this.OwnsGame(id) == false)
             {
-                MessageBox.Show(this, "You don't own that game.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "当前 Steam 账户没有这个游戏。", "无法添加游戏", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -517,6 +560,11 @@ namespace SAM.Picker
         private void OnGameListViewDrawItem(object sender, DrawListViewItemEventArgs e)
         {
             e.DrawDefault = true;
+
+            if (this._OfflinePreview)
+            {
+                return;
+            }
 
             if (e.Item.Bounds.IntersectsWith(this._GameListView.ClientRectangle) == false)
             {

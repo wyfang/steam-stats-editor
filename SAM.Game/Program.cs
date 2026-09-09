@@ -35,7 +35,12 @@ namespace SAM.Game
 
             if (args.Length == 0)
             {
-                Process.Start("SAM.Picker.exe");
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SAM.Picker.exe"),
+                    WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory,
+                    UseShellExecute = false,
+                });
                 return;
             }
 
