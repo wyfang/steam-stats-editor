@@ -2,17 +2,19 @@
 
 基于 Steam Achievement Manager 的 Windows 二次开发项目，用于通过纯文本清单批量编辑游戏统计数据。
 
-[English](./README.en.md)
+[测试构建](https://github.com/wyfang/steam-stats-editor/actions/workflows/windows.yml) · [English](./README.en.md)
 
 ## 功能
 
 开发中的第一版已实现：导出实际统计清单、导入校验与差异预览、填入界面目标值、提交一步、自动分步和实时日志。保存回调后重新读取数值；暂时错误有限退避，结果不明时停止。
 
-当前通过本地逻辑测试与 Windows x86 交叉编译；尚未完成 Windows 界面运行和真实 Steam 提交验证，没有已验证的新版发行包。
+已通过 70 项逻辑测试、GitHub Windows x86 构建及合成数据的离线界面检查。真实 Steam 读取、提交和实际限速仍待实机验证，当前提供测试包。
 
 ## 使用
 
 目标运行环境为 Windows 和 .NET Framework 4.8，需要保持 Steam 客户端运行并登录账户，以及可用的网络连接。
+
+登录 GitHub 后，从成功的 [Windows build](https://github.com/wyfang/steam-stats-editor/actions/workflows/windows.yml) 运行页面下载 `steam-stats-editor-windows` artifact，再解压其中的程序 ZIP。构建产物保留 14 天；测试时无需安装 .NET SDK。
 
 从 `SAM.Picker.exe` 选择游戏，等待读取完成。点击“导出清单”，修改文本中等号右侧的目标数字，再用“导入清单”检查差异并填入界面。导入本身不会写入 Steam；随后选择“提交一步”或“自动分步”。删除某行表示不修改该字段，`0` 是有效目标。
 

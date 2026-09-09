@@ -115,11 +115,17 @@ try {
         'System.Runtime.CompilerServices.Unsafe.dll', 'System.Numerics.Vectors.dll'
     )
     $requiredApplicationNames = @(
-        'SAM.Picker.exe', 'SAM.Game.exe', 'SAM.Game.exe.config',
+        'SAM.Picker.exe', 'SAM.Game.exe', 'SAM.Picker.exe.config', 'SAM.Game.exe.config',
         'SAM.API.dll', 'SAM.Batch.dll', 'SAM.Submission.dll'
     )
     foreach ($name in $requiredApplicationNames) {
         Assert-File (Join-Path $uploadPath $name)
+    }
+    foreach ($name in @('SAM.Picker.exe.config', 'SAM.Game.exe.config')) {
+        [xml]$configuration = Get-Content -LiteralPath (Join-Path $uploadPath $name) -Raw
+        if ($configuration.configuration.startup.supportedRuntime.sku -ne '.NETFramework,Version=v4.8') {
+            throw "Packaged runtime requirement must match .NET Framework 4.8: $name"
+        }
     }
 
     # Cross-check NuGet's resolved net48 runtime dependencies against the explicit

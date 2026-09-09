@@ -2,17 +2,19 @@
 
 A Windows project based on Steam Achievement Manager for bulk editing of game statistics through plain-text lists.
 
-[简体中文](./README.md)
+[Test builds](https://github.com/wyfang/steam-stats-editor/actions/workflows/windows.yml) · [简体中文](./README.md)
 
 ## Features
 
 The first version under development implements statistics export, validated text import with a difference preview, UI target values, single-step and automatic staged submission, and live logs. Values are read again after the stored callback; temporary errors have bounded backoff, and uncertain results stop the operation.
 
-Local logic tests and Windows x86 cross-compilation pass. Windows UI execution and real Steam writes have not been verified, and no verified release with the new features is available.
+All 70 logic tests, GitHub Windows x86 builds and offline UI checks with synthetic data have passed. Real Steam reads, writes and rate limits still need testing on an actual account. Test packages are currently available.
 
 ## Usage
 
 The target environment is Windows with .NET Framework 4.8. A running, signed-in Steam client and network access are required.
+
+While signed in to GitHub, download the `steam-stats-editor-windows` artifact from a successful [Windows build](https://github.com/wyfang/steam-stats-editor/actions/workflows/windows.yml) run, then extract the application ZIP inside. Artifacts are retained for 14 days. Testing the application does not require the .NET SDK.
 
 Select a game in `SAM.Picker.exe` and wait for its data. Use “导出清单” to export, edit the target numbers after the equals signs, then use “导入清单” to review differences and apply targets to the UI. Import does not write to Steam. Choose “提交一步” for one step or “自动分步” for automatic steps afterward. Removing a line leaves that field unchanged; `0` is a valid target.
 
