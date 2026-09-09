@@ -32,7 +32,9 @@ The script runs logic tests, builds x86 applications, checks the game picker, st
 
 Game statistics fields come from the data actually read by SAM. Personal lists and account data are not included in the repository. Steam and game rules still apply; this project does not guarantee that servers will accept changes or that values can be restored.
 
-Protected, trusted-server and average-rate fields are read-only. Staged submission defaults to 120 seconds, with a selectable minimum of 60 seconds; Steam does not publish a guaranteed fastest interval. Stopping prevents later rounds and cannot undo requests already sent or changes in Steam's cache. Logs stay in `%LOCALAPPDATA%/SteamStatsEditor/logs/` and are not automatically uploaded.
+Protected, trusted-server and average-rate fields are read-only. Staged submission defaults to 120 seconds, with a selectable minimum of 60 seconds; Steam does not publish a guaranteed fastest interval. Stopping prevents later rounds and cannot undo requests already sent or changes in Steam's cache.
+
+Logs are saved automatically in `logs/` beside `SteamStatsEditor.exe`; the log window shows the full file path. Each game editor window creates a new log file. Files are never automatically deleted or uploaded; unwanted logs can be deleted manually after closing the application. If the application directory is not writable, a message reports the failure and logs can be saved manually from the log window. Existing logs in the old `%LOCALAPPDATA%/SteamStatsEditor/logs/` location are neither migrated nor removed. The window retains approximately 20,000 entries; trimming its display does not truncate the files on disk.
 
 ## License
 

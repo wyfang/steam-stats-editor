@@ -56,8 +56,14 @@ namespace SAM.Game
             this.FormClosed += (s, e) => this._SubmissionTimer.Dispose();
             try
             {
-                var directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "SteamStatsEditor", "logs");
+                // Resolve from the executable, not the shortcut's working directory.
+                // Packaged SAM.Game.exe lives in app/ next to the root launcher.
+                var applicationDirectory = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
+                if (string.Equals(applicationDirectory.Name, "app", StringComparison.OrdinalIgnoreCase) &&
+                    applicationDirectory.Parent != null &&
+                    File.Exists(Path.Combine(applicationDirectory.Parent.FullName, "SteamStatsEditor.exe")))
+                    applicationDirectory = applicationDirectory.Parent;
+                var directory = Path.Combine(applicationDirectory.FullName, "logs");
                 Directory.CreateDirectory(directory);
                 this._SubmissionLogPath = Path.Combine(directory,
                     this._GameId.ToString(CultureInfo.InvariantCulture) + "-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture) + "-" + Guid.NewGuid().ToString("N") + ".txt");
@@ -67,7 +73,7 @@ namespace SAM.Game
             {
                 this._SubmissionLogPath = null;
                 // The in-window log remains available for manual export.
-                this.AddBatchLog("无法创建自动日志文件；可在日志窗口保存。" + e.Message);
+                this.AddBatchLog("无法在程序目录创建自动日志文件，请确认程序文件夹可写；可在日志窗口手动保存。" + e.Message);
             }
         }
 

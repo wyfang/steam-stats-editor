@@ -252,6 +252,16 @@ namespace SAM.Game
             if (this._BatchLogWindow != null) { this._BatchLogWindow.Activate(); return; }
             var dialog = new Form { Text = "提交日志 · 实时更新", Width = 960, Height = 580, MinimumSize = new Size(640, 400), Font = this.Font, Padding = new Padding(16), StartPosition = FormStartPosition.CenterParent, MinimizeBox = false, MaximizeBox = true };
             var text = new TextBox { Dock = DockStyle.Fill, Multiline = true, ReadOnly = true, ScrollBars = ScrollBars.Both, WordWrap = false, Font = new Font("Consolas", 10), Text = string.Join(Environment.NewLine, this._BatchLogLines) };
+            var location = new TextBox
+            {
+                Dock = DockStyle.Top, ReadOnly = true, Multiline = true, WordWrap = false,
+                ScrollBars = ScrollBars.Horizontal, Height = 68, BorderStyle = BorderStyle.None,
+                BackColor = dialog.BackColor, TabStop = false,
+                Text = this._SubmissionLogPath == null
+                    ? "自动保存不可用，请使用“保存日志”手动导出当前窗口记录。"
+                    : "自动保存路径：" + this._SubmissionLogPath + Environment.NewLine +
+                        "日志文件不会自动删除。“保存日志”仅另存当前窗口中保留的记录。",
+            };
             var footer = new FlowLayoutPanel { Dock = DockStyle.Bottom, AutoSize = true, Padding = new Padding(0, 16, 0, 0), FlowDirection = FlowDirection.RightToLeft };
             var save = new Button { Text = "保存日志…", Width = 120, Height = 38, Margin = new Padding(12, 0, 0, 0) };
             var stop = new Button { Text = "停止后续轮次", Width = 160, Height = 38, Margin = Padding.Empty, Enabled = this.SubmissionCanStop };
@@ -275,6 +285,7 @@ namespace SAM.Game
             footer.Controls.Add(save);
             footer.Controls.Add(stop);
             dialog.Controls.Add(text);
+            dialog.Controls.Add(location);
             dialog.Controls.Add(footer);
             dialog.Show(this);
         }
