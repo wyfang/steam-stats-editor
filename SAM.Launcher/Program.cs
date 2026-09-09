@@ -23,9 +23,15 @@ namespace SAM.Launcher
         {
             // Used by the Windows packaging check. This path never opens Steam or the picker.
             bool checkOnly = args.Length == 1 && args[0] == "--check-package";
-            if (checkOnly) Console.OutputEncoding = new UTF8Encoding(false);
             try
             {
+                // A WinExe has no console: OutputEncoding would call SetConsoleOutputCP
+                // and fail even when stdout is redirected by the package checker.
+                if (checkOnly)
+                {
+                    Console.SetOut(new StreamWriter(Console.OpenStandardOutput(), new UTF8Encoding(false)) { AutoFlush = true });
+                    Console.SetError(new StreamWriter(Console.OpenStandardError(), new UTF8Encoding(false)) { AutoFlush = true });
+                }
                 if (args.Length != 0 && !checkOnly)
                 {
                     throw new ArgumentException("不支持此启动参数。请直接双击 SteamStatsEditor.exe。");

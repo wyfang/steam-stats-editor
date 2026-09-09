@@ -121,6 +121,17 @@ namespace SAM.Picker
                     Margin = new Padding(14, 0, 0, 0),
                 },
             });
+            foreach (var strip in new[] { this._PickerToolStrip, addGameStrip })
+            {
+                foreach (ToolStripItem item in strip.Items)
+                {
+                    if (item is ToolStripLabel)
+                    {
+                        item.Padding = new Padding(2, 8, 2, 8);
+                        item.Margin = new Padding(item.Margin.Left, 2, item.Margin.Right, 2);
+                    }
+                }
+            }
 
             var listFrame = new Panel
             {
@@ -163,6 +174,10 @@ namespace SAM.Picker
                 UseVisualStyleBackColor = false,
             };
             this._OpenSelectedGameButton.FlatAppearance.BorderSize = 0;
+            this._OpenSelectedGameButton.BackColor = Color.FromArgb(224, 229, 236);
+            this._OpenSelectedGameButton.EnabledChanged += (_, _) =>
+                this._OpenSelectedGameButton.BackColor = this._OpenSelectedGameButton.Enabled
+                    ? Color.FromArgb(33, 91, 180) : Color.FromArgb(224, 229, 236);
             this._OpenSelectedGameButton.Click += (_, _) => this.OnActivateGame(this._GameListView, EventArgs.Empty);
             footer.Controls.Add(this._OpenSelectedGameButton);
 

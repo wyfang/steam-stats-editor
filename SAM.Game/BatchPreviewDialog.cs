@@ -86,7 +86,7 @@ namespace SAM.Game
             grid.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(231, 236, 243);
             grid.ColumnHeadersDefaultCellStyle.ForeColor = Color.FromArgb(55, 69, 86);
             grid.ColumnHeadersDefaultCellStyle.Padding = new Padding(10, 6, 10, 6);
-            grid.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.False;
+            grid.ColumnHeadersDefaultCellStyle.WrapMode = DataGridViewTriState.True;
             foreach (var column in new[] { ("Id", "字段 ID", 22, 180), ("Name", "名称", 21, 150), ("Current", "Steam 已读取值", 13, 118), ("Pending", "界面目标值", 12, 106), ("Target", "文件目标值", 12, 106), ("Status", "校验 / 约束", 20, 160) })
             {
                 var valueColumn = column.Item1 == "Current" || column.Item1 == "Pending" || column.Item1 == "Target";
