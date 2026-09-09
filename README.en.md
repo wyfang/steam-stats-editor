@@ -38,7 +38,7 @@ The script runs tests and creates `artifacts/windows-*/steam-stats-editor-window
 
 - Fields come from the data actually read by SAM. Protected, trusted-server and average-rate fields are read-only; staged submission cannot bypass field permissions.
 - Automatic submission defaults to 120 seconds between rounds, with a selectable minimum of 60 seconds. Steam does not publish a guaranteed fastest interval. Stopping prevents later rounds and cannot undo requests already sent or changes in Steam's cache.
-- Logs are saved in `logs/` beside `SteamStatsEditor.exe`, with a new file for each game editor window. They are never automatically deleted or uploaded. Delete unwanted files after closing the application. An unwritable directory produces a warning; logs can then be saved manually from the log window. Old AppData logs are neither migrated nor removed automatically.
+- Logs are saved in `logs/` beside `SteamStatsEditor.exe`, with a new file for each game editor window. They are never automatically deleted or uploaded. Delete unwanted files after closing the application. An unwritable directory produces a warning; logs can then be saved manually from the log window.
 - Exported lists and logs stay local, and personal statistics are not included in the repository. Keep a backup of the original values before editing. Steam and game rules still apply; this project does not guarantee that every game will accept changes or that values can be restored.
 
 ## License
