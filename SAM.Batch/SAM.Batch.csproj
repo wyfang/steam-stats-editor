@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <Authors>Wi-Fi</Authors>
+    <Description>Steam Stats Editor 的纯文本清单与统计值分步计划核心。</Description>
+  </PropertyGroup>
+</Project>

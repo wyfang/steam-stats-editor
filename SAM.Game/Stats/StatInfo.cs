@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
+/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,6 +27,8 @@ namespace SAM.Game.Stats
         public abstract bool IsModified { get; }
         public string Id { get; set; }
         public string DisplayName { get; set; }
+        // Steam Stats Editor: separate confirmed values from pending targets.
+        public abstract object ConfirmedValue { get; }
         public abstract object Value { get; set; }
         public bool IsIncrementOnly { get; set; }
         public int Permission { get; set; }

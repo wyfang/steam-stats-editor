@@ -22,12 +22,15 @@
 
 namespace SAM.Game.Stats
 {
+    // Altered by wyfang for Steam Stats Editor; the original zlib notice is retained.
     internal class FloatStatDefinition : StatDefinition
     {
         public float MinValue;
         public float MaxValue;
         public float MaxChange;
         public bool IncrementOnly;
+        public bool IsAverageRate;
+        public bool SetByTrustedGameServer;
         public float DefaultValue;
     }
 }

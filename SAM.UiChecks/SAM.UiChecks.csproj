@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <LangVersion>9.0</LangVersion>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Drawing" />
+    <ProjectReference Include="../SAM.Batch/SAM.Batch.csproj" />
+    <Compile Include="../SAM.Game/BatchPreviewDialog.cs" Link="BatchPreviewDialog.cs" />
+    <Compile Include="../SAM.Game/Stats/FloatStatInfo.cs" Link="Stats/FloatStatInfo.cs" />
+    <Compile Include="../SAM.Game/Stats/StatInfo.cs" Link="Stats/StatInfo.cs" />
+    <Compile Include="../SAM.Game/Stats/StatFlags.cs" Link="Stats/StatFlags.cs" />
+    <Compile Include="../SAM.Game/Stats/StatIsProtectedException.cs" Link="Stats/StatIsProtectedException.cs" />
+  </ItemGroup>
+</Project>

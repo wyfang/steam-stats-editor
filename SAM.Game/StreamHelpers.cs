@@ -21,7 +21,6 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -30,47 +29,66 @@ namespace SAM.Game
 {
     internal static class StreamHelpers
     {
+        // Steam Stats Editor 修改：短读时继续读取，截断输入立即报错，不能填零或无限循环。
+        private static void ReadRequiredBytes(Stream stream, byte[] data, int offset, int count)
+        {
+            int total = 0;
+            while (total < count)
+            {
+                int read = stream.Read(data, offset + total, count - total);
+                if (read <= 0)
+                {
+                    throw new EndOfStreamException("Steam schema 数据被截断。");
+                }
+                total += read;
+            }
+        }
+
         public static byte ReadValueU8(this Stream stream)
         {
-            return (byte)stream.ReadByte();
+            int value = stream.ReadByte();
+            if (value < 0)
+            {
+                throw new EndOfStreamException("Steam schema 数据被截断。");
+            }
+            return (byte)value;
         }
 
         public static int ReadValueS32(this Stream stream)
         {
             var data = new byte[4];
-            int read = stream.Read(data, 0, 4);
-            Debug.Assert(read == 4);
+            ReadRequiredBytes(stream, data, 0, data.Length);
             return BitConverter.ToInt32(data, 0);
         }
 
         public static uint ReadValueU32(this Stream stream)
         {
             var data = new byte[4];
-            int read = stream.Read(data, 0, 4);
-            Debug.Assert(read == 4);
+            ReadRequiredBytes(stream, data, 0, data.Length);
             return BitConverter.ToUInt32(data, 0);
         }
 
         public static ulong ReadValueU64(this Stream stream)
         {
             var data = new byte[8];
-            int read = stream.Read(data, 0, 8);
-            Debug.Assert(read == 8);
+            ReadRequiredBytes(stream, data, 0, data.Length);
             return BitConverter.ToUInt64(data, 0);
         }
 
         public static float ReadValueF32(this Stream stream)
         {
             var data = new byte[4];
-            int read = stream.Read(data, 0, 4);
-            Debug.Assert(read == 4);
+            ReadRequiredBytes(stream, data, 0, data.Length);
             return BitConverter.ToSingle(data, 0);
         }
 
         internal static string ReadStringInternalDynamic(this Stream stream, Encoding encoding, char end)
         {
             int characterSize = encoding.GetByteCount("e");
-            Debug.Assert(characterSize == 1 || characterSize == 2 || characterSize == 4);
+            if (characterSize != 1 && characterSize != 2 && characterSize != 4)
+            {
+                throw new ArgumentException("不支持的 schema 字符编码。", nameof(encoding));
+            }
             string characterEnd = end.ToString(CultureInfo.InvariantCulture);
 
             int i = 0;
@@ -83,8 +101,7 @@ namespace SAM.Game
                     Array.Resize(ref data, data.Length + (128 * characterSize));
                 }
 
-                int read = stream.Read(data, i, characterSize);
-                Debug.Assert(read == characterSize);
+                ReadRequiredBytes(stream, data, i, characterSize);
 
                 if (encoding.GetString(data, i, characterSize) == characterEnd)
                 {

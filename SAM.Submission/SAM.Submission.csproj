@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <Authors>wyfang</Authors>
+    <Description>Steam Stats Editor asynchronous submission coordinator.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../SAM.Batch/SAM.Batch.csproj" />
+  </ItemGroup>
+</Project>

@@ -28,6 +28,32 @@ namespace SAM.API.Wrappers
 {
     public class SteamUtils005 : NativeWrapper<ISteamUtils005>
     {
+        // Altered by wyfang: consume the exact RequestUserStats call result and reported
+        // payload size. Received's SteamID is at byte 12; native tail padding may vary.
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private delegate bool NativeGetApiCallResult(IntPtr self, ulong callHandle, IntPtr callback,
+            int callbackSize, int expectedCallback, [MarshalAs(UnmanagedType.I1)] out bool failed);
+
+        public bool GetUserStatsCallResult(ulong callHandle, uint parameterSize, out Types.UserStatsReceived result, out bool failed)
+        {
+            result = default;
+            failed = false;
+            if (parameterSize != 20 && parameterSize != 24)
+                throw new InvalidOperationException("Unexpected UserStatsReceived payload size: " + parameterSize);
+            IntPtr buffer = Marshal.AllocHGlobal(checked((int)parameterSize));
+            try
+            {
+                var call = this.GetFunction<NativeGetApiCallResult>(this.Functions.GetAPICallResult);
+                if (!call(this.ObjectAddress, callHandle, buffer, checked((int)parameterSize), 1101, out failed) || failed) return false;
+                var payload = new byte[checked((int)parameterSize)];
+                Marshal.Copy(buffer, payload, 0, payload.Length);
+                result = StatsCallResultDecoder.Decode(payload);
+                return true;
+            }
+            finally { Marshal.FreeHGlobal(buffer); }
+        }
+
         #region GetConnectedUniverse
         [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
         private delegate int NativeGetConnectedUniverse(IntPtr self);

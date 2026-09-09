@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28803.156
@@ -8,6 +8,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SAM.API", "SAM.API\SAM.API.csproj", "{DF9102D5-048A-4D21-8CE3-3544CBDF0ED1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SAM.Game", "SAM.Game\SAM.Game.csproj", "{7640DE31-E54E-45F9-9CF0-8DF3A3EA30FC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SAM.Batch", "SAM.Batch\SAM.Batch.csproj", "{D84C9844-4A4A-490C-9FAD-2B533E301714}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SAM.Submission", "SAM.Submission\SAM.Submission.csproj", "{3A2C8ECD-1DE1-49AD-9744-098DB2BC4F16}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +31,14 @@ Global
 		{7640DE31-E54E-45F9-9CF0-8DF3A3EA30FC}.Debug|x86.Build.0 = Debug|x86
 		{7640DE31-E54E-45F9-9CF0-8DF3A3EA30FC}.Release|x86.ActiveCfg = Release|x86
 		{7640DE31-E54E-45F9-9CF0-8DF3A3EA30FC}.Release|x86.Build.0 = Release|x86
+		{D84C9844-4A4A-490C-9FAD-2B533E301714}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D84C9844-4A4A-490C-9FAD-2B533E301714}.Debug|x86.Build.0 = Debug|Any CPU
+		{D84C9844-4A4A-490C-9FAD-2B533E301714}.Release|x86.ActiveCfg = Release|Any CPU
+		{D84C9844-4A4A-490C-9FAD-2B533E301714}.Release|x86.Build.0 = Release|Any CPU
+		{3A2C8ECD-1DE1-49AD-9744-098DB2BC4F16}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3A2C8ECD-1DE1-49AD-9744-098DB2BC4F16}.Debug|x86.Build.0 = Debug|Any CPU
+		{3A2C8ECD-1DE1-49AD-9744-098DB2BC4F16}.Release|x86.ActiveCfg = Release|Any CPU
+		{3A2C8ECD-1DE1-49AD-9744-098DB2BC4F16}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

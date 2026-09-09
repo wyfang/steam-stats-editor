@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SAM.Batch\SAM.Batch.csproj" />
+    <Compile Include="..\SAM.Game\KeyValue.cs" Link="Schema\KeyValue.cs" />
+    <Compile Include="..\SAM.Game\KeyValueType.cs" Link="Schema\KeyValueType.cs" />
+    <Compile Include="..\SAM.Game\StreamHelpers.cs" Link="Schema\StreamHelpers.cs" />
+    <Compile Include="../SAM.Game/Stats/FloatStatInfo.cs" Link="Stats/FloatStatInfo.cs" />
+    <Compile Include="../SAM.Game/Stats/StatInfo.cs" Link="Stats/StatInfo.cs" />
+    <Compile Include="../SAM.Game/Stats/StatFlags.cs" Link="Stats/StatFlags.cs" />
+    <Compile Include="../SAM.Game/Stats/StatIsProtectedException.cs" Link="Stats/StatIsProtectedException.cs" />
+  </ItemGroup>
+</Project>

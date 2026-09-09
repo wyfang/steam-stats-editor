@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
+/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -26,6 +26,9 @@ namespace SAM.Game.Stats
     {
         public int OriginalValue;
         public int IntValue;
+
+        // Steam Stats Editor: expose the last read value without changing the target.
+        public override object ConfirmedValue => this.OriginalValue;
 
         public override object Value
         {

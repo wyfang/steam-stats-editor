@@ -28,6 +28,47 @@ namespace SAM.API.Wrappers
 {
     public class SteamUserStats013 : NativeWrapper<ISteamUserStats013>
     {
+        // Altered by wyfang: query the user snapshot associated with a completed
+        // RequestUserStats call; do not use the GetStat view just modified by SetStat.
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private delegate bool NativeGetUserStatInt(IntPtr self, ulong user, IntPtr name, out int value);
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private delegate bool NativeGetUserStatFloat(IntPtr self, ulong user, IntPtr name, out float value);
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private delegate bool NativeGetUserAchievement(IntPtr self, ulong user, IntPtr name,
+            [MarshalAs(UnmanagedType.I1)] out bool achieved);
+        [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
+        [return: MarshalAs(UnmanagedType.I1)]
+        private delegate bool NativeGetUserAchievementAndUnlockTime(IntPtr self, ulong user, IntPtr name,
+            [MarshalAs(UnmanagedType.I1)] out bool achieved, out uint unlockTime);
+
+        public bool GetUserStatValue(ulong user, string name, out int value)
+        {
+            using var nativeName = NativeStrings.StringToStringHandle(name);
+            return this.GetFunction<NativeGetUserStatInt>(this.Functions.GetUserStatInt)(this.ObjectAddress, user, nativeName.Handle, out value);
+        }
+
+        public bool GetUserStatValue(ulong user, string name, out float value)
+        {
+            using var nativeName = NativeStrings.StringToStringHandle(name);
+            return this.GetFunction<NativeGetUserStatFloat>(this.Functions.GetUserStatFloat)(this.ObjectAddress, user, nativeName.Handle, out value);
+        }
+
+        public bool GetUserAchievement(ulong user, string name, out bool achieved)
+        {
+            using var nativeName = NativeStrings.StringToStringHandle(name);
+            return this.GetFunction<NativeGetUserAchievement>(this.Functions.GetUserAchievement)(this.ObjectAddress, user, nativeName.Handle, out achieved);
+        }
+
+        public bool GetUserAchievementAndUnlockTime(ulong user, string name, out bool achieved, out uint unlockTime)
+        {
+            using var nativeName = NativeStrings.StringToStringHandle(name);
+            return this.GetFunction<NativeGetUserAchievementAndUnlockTime>(this.Functions.GetUserAchievementAndUnlockTime)(this.ObjectAddress, user, nativeName.Handle, out achieved, out unlockTime);
+        }
+
         #region GetStatValue (int)
         [UnmanagedFunctionPointer(CallingConvention.ThisCall)]
         [return: MarshalAs(UnmanagedType.I1)]

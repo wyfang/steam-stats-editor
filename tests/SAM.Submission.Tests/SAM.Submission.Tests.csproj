@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="../../SAM.Submission/SAM.Submission.csproj" /></ItemGroup>
+  <ItemGroup>
+    <Compile Include="../../SAM.API/StatsCallResultDecoder.cs" Link="StatsCallResultDecoder.cs" />
+    <Compile Include="../../SAM.API/Types/UserStatsReceived.cs" Link="UserStatsReceived.cs" />
+  </ItemGroup>
+</Project>

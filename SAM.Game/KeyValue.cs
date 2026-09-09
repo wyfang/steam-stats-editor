@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
+/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -23,10 +23,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
 using System.Linq;
 
 namespace SAM.Game
 {
+    // Steam Stats Editor: schema numbers are invariant across Windows locales.
     internal class KeyValue
     {
         private static readonly KeyValue _Invalid = new();
@@ -85,7 +87,7 @@ namespace SAM.Game
                 case KeyValueType.String:
                 case KeyValueType.WideString:
                 {
-                    return int.TryParse((string)this.Value, out int value) == false
+                    return int.TryParse((string)this.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) == false
                         ? defaultValue
                         : value;
                 }
@@ -121,7 +123,7 @@ namespace SAM.Game
                 case KeyValueType.String:
                 case KeyValueType.WideString:
                 {
-                    return float.TryParse((string)this.Value, out float value) == false
+                    return float.TryParse((string)this.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float value) == false
                         ? defaultValue
                         : value;
                 }
@@ -157,7 +159,7 @@ namespace SAM.Game
                 case KeyValueType.String:
                 case KeyValueType.WideString:
                 {
-                    return int.TryParse((string)this.Value, out int value) == false
+                    return int.TryParse((string)this.Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int value) == false
                         ? defaultValue
                         : value != 0;
                 }
@@ -223,6 +225,13 @@ namespace SAM.Game
 
         public bool ReadAsBinary(Stream input)
         {
+            return this.ReadAsBinary(input, true);
+        }
+
+        // Steam Stats Editor 修改：嵌套节点只消费自身结束符，失败必须传回根节点。
+        private bool ReadAsBinary(Stream input, bool requireEndOfStream)
+        {
+            this.Valid = false;
             this.Children = new();
             try
             {
@@ -245,7 +254,10 @@ namespace SAM.Game
                     {
                         case KeyValueType.None:
                         {
-                            current.ReadAsBinary(input);
+                            if (current.ReadAsBinary(input, false) == false)
+                            {
+                                throw new FormatException("嵌套的 Steam schema 节点无效。");
+                            }
                             break;
                         }
 
@@ -310,11 +322,17 @@ namespace SAM.Game
                     this.Children.Add(current);
                 }
 
+                if (requireEndOfStream && input.Position != input.Length)
+                {
+                    throw new FormatException("Steam schema 结束符后存在多余数据。");
+                }
                 this.Valid = true;
-                return input.Position == input.Length;
+                return true;
             }
             catch (Exception)
             {
+                this.Valid = false;
+                this.Children.Clear();
                 return false;
             }
         }

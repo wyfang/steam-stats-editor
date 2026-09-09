@@ -1,0 +1,45 @@
+name: Windows build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Test, build, render previews and package
+        shell: pwsh
+        run: ./scripts/build-windows.ps1
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: steam-stats-editor-windows
+          path: artifacts/windows-*/steam-stats-editor-windows.zip
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload offline UI evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: steam-stats-editor-ui-checks
+          path: |
+            artifacts/windows-*/ui/*.png
+            artifacts/windows-*/ui/stdout.txt
+            artifacts/windows-*/ui/stderr.txt
+          if-no-files-found: warn
+          retention-days: 14

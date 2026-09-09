@@ -1,4 +1,4 @@
-﻿/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
+/* Copyright (c) 2024 Rick (rick 'at' gibbed 'dot' us)
  *
  * This software is provided 'as-is', without any express or implied
  * warranty. In no event will the authors be held liable for any damages
@@ -27,12 +27,17 @@ namespace SAM.Game.Stats
         public float OriginalValue;
         public float FloatValue;
 
+        // Steam Stats Editor: expose the last read value without changing the target.
+        public override object ConfirmedValue => this.OriginalValue;
+
         public override object Value
         {
             get => this.FloatValue;
             set
             {
-                var f = float.Parse((string)value, System.Globalization.CultureInfo.CurrentCulture);
+                // Altered by wyfang: reject non-finite values and silent float32 rounding
+                // before changing the bound model or discarding the user's input text.
+                var f = SAM.Batch.BatchNumbers.ParseUiFloat((string)value, System.Globalization.CultureInfo.CurrentCulture);
                 if ((this.Permission & 2) != 0 &&
                     this.FloatValue.Equals(f) == false)
                 {
